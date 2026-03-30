@@ -1,31 +1,82 @@
+import java.util.*;
+
+// Add-On Service class
+class Service {
+    String serviceName;
+    double cost;
+
+    public Service(String serviceName, double cost) {
+        this.serviceName = serviceName;
+        this.cost = cost;
+    }
+
+    @Override
+    public String toString() {
+        return serviceName + " (₹" + cost + ")";
+    }
+}
+
 public class BookMyStay {
+
+    // Reservation ID -> List of Services
+    private static Map<String, List<Service>> reservationServices = new HashMap<>();
+
     public static void main(String[] args) {
-        BookingRequestQueue bookingQueue = new BookingRequestQueue();
 
-        // Simulating multiple guest requests
-        Reservation r1 = new Reservation("Avinash", "Deluxe", 2);
-        Reservation r2 = new Reservation("Ravi", "Suite", 3);
-        Reservation r3 = new Reservation("Priya", "Standard", 1);
-        Reservation r4 = new Reservation("Kiran", "Deluxe", 4);
+        // Assume these reservation IDs are already created in Use Case 6
+        String res1 = "DEL-1";
+        String res2 = "SUI-2";
 
-        // Step 1: Add requests (arrival order)
-        bookingQueue.addRequest(r1);
-        bookingQueue.addRequest(r2);
-        bookingQueue.addRequest(r3);
-        bookingQueue.addRequest(r4);
+        // Add services
+        addService(res1, new Service("Breakfast", 200));
+        addService(res1, new Service("Airport Pickup", 500));
+        addService(res2, new Service("Extra Bed", 300));
 
-        // Step 2: Display queue
-        bookingQueue.displayQueue();
+        // Display services
+        displayServices(res1);
+        displayServices(res2);
 
-        // Step 3: Show next request (no removal)
-        System.out.println("\nNext request to process (peek):");
-        System.out.println(bookingQueue.getNextRequest());
+        // Calculate cost
+        calculateTotalCost(res1);
+        calculateTotalCost(res2);
+    }
 
-        // Step 4: Process one request (FIFO)
-        System.out.println("\nProcessing request:");
-        System.out.println(bookingQueue.processNextRequest());
+    // Add service to reservation
+    private static void addService(String reservationId, Service service) {
+        reservationServices.putIfAbsent(reservationId, new ArrayList<>());
+        reservationServices.get(reservationId).add(service);
 
-        // Step 5: Display updated queue
-        bookingQueue.displayQueue();
+        System.out.println("Service added to " + reservationId + ": " + service);
+    }
+
+    // Display services for a reservation
+    private static void displayServices(String reservationId) {
+        System.out.println("\nServices for Reservation " + reservationId + ":");
+
+        List<Service> services = reservationServices.get(reservationId);
+
+        if (services == null || services.isEmpty()) {
+            System.out.println("No services selected.");
+            return;
+        }
+
+        for (Service s : services) {
+            System.out.println("- " + s);
+        }
+    }
+
+    // Calculate total additional cost
+    private static void calculateTotalCost(String reservationId) {
+        List<Service> services = reservationServices.get(reservationId);
+
+        double total = 0;
+
+        if (services != null) {
+            for (Service s : services) {
+                total += s.cost;
+            }
+        }
+
+        System.out.println("Total Add-On Cost for " + reservationId + ": ₹" + total);
     }
 }

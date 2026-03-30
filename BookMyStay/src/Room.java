@@ -1,4 +1,5 @@
-public abstract class Room {
+// Abstract Room Class
+abstract class Room {
     private int beds;
     private double size;
     private double price;
@@ -19,14 +20,5 @@ public abstract class Room {
 
     public double getPrice() {
         return price;
-    }
-
-    public abstract String getRoomType();
-
-    public void displayDetails() {
-        System.out.println("Room Type: " + getRoomType());
-        System.out.println("Beds: " + beds);
-        System.out.println("Size: " + size + " sq.ft");
-        System.out.println("Price: ₹" + price);
     }
 }

@@ -72,7 +72,7 @@ class PersistenceService {
 }
 
 // Main Class
-public class UseCase12DataPersistenceRecovery {
+public class UseCase11DataPersistenceRecovery {
 
     public static void main(String[] args) {
 

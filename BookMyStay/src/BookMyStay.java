@@ -1,5 +1,20 @@
 import java.util.*;
 
+// Service class
+class Service {
+    String serviceName;
+    double cost;
+
+    public Service(String serviceName, double cost) {
+        this.serviceName = serviceName;
+        this.cost = cost;
+    }
+
+    public String toString() {
+        return serviceName + " (₹" + cost + ")";
+    }
+}
+
 // Booking Request class
 class BookingRequest {
     String customerName;
@@ -11,94 +26,81 @@ class BookingRequest {
     }
 }
 
-public class BookMyStay{
+public class BookMyStay {
 
-    // FIFO Queue for booking requests
+    // ----------- Booking सिस्टम -----------
     private static Queue<BookingRequest> requestQueue = new LinkedList<>();
-
-    // Inventory: roomType -> available count
     private static Map<String, Integer> inventory = new HashMap<>();
-
-    // Allocated rooms: roomType -> set of room IDs
     private static Map<String, Set<String>> allocatedRooms = new HashMap<>();
-
-    // Global set to ensure unique room IDs
     private static Set<String> usedRoomIds = new HashSet<>();
-
-    // Room ID counter
     private static int roomCounter = 1;
+
+    // ----------- Services सिस्टम -----------
+    private static Map<String, List<Service>> reservationServices = new HashMap<>();
 
     public static void main(String[] args) {
 
-        // Initialize inventory
+        // Inventory setup
         inventory.put("DELUXE", 2);
         inventory.put("SUITE", 1);
-        inventory.put("STANDARD", 2);
 
-        // Add booking requests to queue
+        // Booking requests
         requestQueue.add(new BookingRequest("Avinash", "DELUXE"));
         requestQueue.add(new BookingRequest("Ravi", "SUITE"));
-        requestQueue.add(new BookingRequest("Kiran", "DELUXE"));
-        requestQueue.add(new BookingRequest("Sneha", "STANDARD"));
-        requestQueue.add(new BookingRequest("John", "SUITE")); // should fail
 
-        // Process all requests
         processBookings();
-
-        // Display final allocation
         displayAllocations();
+
+        // Add services
+        addService("DEL-1", new Service("Breakfast", 200));
+        displayServices("DEL-1");
+        calculateTotalCost("DEL-1");
     }
 
-    // Process bookings in FIFO order
+    // -------- Booking Methods --------
     private static void processBookings() {
         while (!requestQueue.isEmpty()) {
-            BookingRequest request = requestQueue.poll();
-            confirmReservation(request);
+            confirmReservation(requestQueue.poll());
         }
     }
 
-    // Confirm reservation and allocate room
     private static void confirmReservation(BookingRequest request) {
-        String roomType = request.roomType;
+        String type = request.roomType;
 
-        // Check availability
-        if (!inventory.containsKey(roomType) || inventory.get(roomType) <= 0) {
-            System.out.println("Booking FAILED for " + request.customerName +
-                    " (No " + roomType + " rooms available)");
+        if (!inventory.containsKey(type) || inventory.get(type) <= 0) {
+            System.out.println("Booking FAILED for " + request.customerName);
             return;
         }
 
-        // Generate unique room ID
-        String roomId;
-        do {
-            roomId = roomType.substring(0, 3).toUpperCase() + "-" + roomCounter++;
-        } while (usedRoomIds.contains(roomId));
+        String roomId = type.substring(0, 3).toUpperCase() + "-" + roomCounter++;
 
-        // Atomic allocation
         usedRoomIds.add(roomId);
+        allocatedRooms.putIfAbsent(type, new HashSet<>());
+        allocatedRooms.get(type).add(roomId);
+        inventory.put(type, inventory.get(type) - 1);
 
-        allocatedRooms.putIfAbsent(roomType, new HashSet<>());
-        allocatedRooms.get(roomType).add(roomId);
-
-        // Update inventory immediately
-        inventory.put(roomType, inventory.get(roomType) - 1);
-
-        // Confirm booking
-        System.out.println("Booking CONFIRMED for " + request.customerName +
-                " | Room Type: " + roomType +
-                " | Room ID: " + roomId);
+        System.out.println("CONFIRMED: " + request.customerName + " -> " + roomId);
     }
 
-    // Display final allocations
     private static void displayAllocations() {
-        System.out.println("\n--- Final Room Allocations ---");
-        for (String type : allocatedRooms.keySet()) {
-            System.out.println(type + " -> " + allocatedRooms.get(type));
-        }
+        System.out.println(allocatedRooms);
+    }
 
-        System.out.println("\n--- Remaining Inventory ---");
-        for (String type : inventory.keySet()) {
-            System.out.println(type + " -> " + inventory.get(type));
+    // -------- Service Methods --------
+    private static void addService(String id, Service s) {
+        reservationServices.putIfAbsent(id, new ArrayList<>());
+        reservationServices.get(id).add(s);
+    }
+
+    private static void displayServices(String id) {
+        System.out.println(reservationServices.get(id));
+    }
+
+    private static void calculateTotalCost(String id) {
+        double total = 0;
+        for (Service s : reservationServices.getOrDefault(id, new ArrayList<>())) {
+            total += s.cost;
         }
+        System.out.println("Total: ₹" + total);
     }
 }

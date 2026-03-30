@@ -1,17 +1,9 @@
 import java.util.*;
 
-// Service class
-class Service {
-    String serviceName;
-    double cost;
-
-    public Service(String serviceName, double cost) {
-        this.serviceName = serviceName;
-        this.cost = cost;
-    }
-
-    public String toString() {
-        return serviceName + " (₹" + cost + ")";
+// Custom Exception
+class InvalidBookingException extends Exception {
+    public InvalidBookingException(String message) {
+        super(message);
     }
 }
 
@@ -26,81 +18,91 @@ class BookingRequest {
     }
 }
 
+// Validator class
+class Validator {
+
+    // Validate booking input and system state
+    public static void validate(BookingRequest request, Map<String, Integer> inventory)
+            throws InvalidBookingException {
+
+        // Check null or empty input
+        if (request.customerName == null || request.customerName.isEmpty()) {
+            throw new InvalidBookingException("Customer name cannot be empty.");
+        }
+
+        if (request.roomType == null || request.roomType.isEmpty()) {
+            throw new InvalidBookingException("Room type cannot be empty.");
+        }
+
+        // Validate room type exists
+        if (!inventory.containsKey(request.roomType)) {
+            throw new InvalidBookingException("Invalid room type: " + request.roomType);
+        }
+
+        // Check availability
+        if (inventory.get(request.roomType) <= 0) {
+            throw new InvalidBookingException("No rooms available for type: " + request.roomType);
+        }
+    }
+}
+
 public class BookMyStay {
 
-    // ----------- Booking सिस्टम -----------
-    private static Queue<BookingRequest> requestQueue = new LinkedList<>();
     private static Map<String, Integer> inventory = new HashMap<>();
-    private static Map<String, Set<String>> allocatedRooms = new HashMap<>();
     private static Set<String> usedRoomIds = new HashSet<>();
     private static int roomCounter = 1;
 
-    // ----------- Services सिस्टम -----------
-    private static Map<String, List<Service>> reservationServices = new HashMap<>();
-
     public static void main(String[] args) {
 
-        // Inventory setup
-        inventory.put("DELUXE", 2);
-        inventory.put("SUITE", 1);
+        // Initialize inventory
+        inventory.put("DELUXE", 1);
+        inventory.put("SUITE", 0);   // intentionally 0 to trigger error
+        inventory.put("STANDARD", 2);
 
-        // Booking requests
-        requestQueue.add(new BookingRequest("Avinash", "DELUXE"));
-        requestQueue.add(new BookingRequest("Ravi", "SUITE"));
+        // Booking requests (some invalid)
+        List<BookingRequest> requests = Arrays.asList(
+                new BookingRequest("Avinash", "DELUXE"),
+                new BookingRequest("", "STANDARD"),          // invalid name
+                new BookingRequest("Ravi", "SUITE"),         // no availability
+                new BookingRequest("Kiran", "PENTHOUSE"),    // invalid type
+                new BookingRequest("Sneha", "STANDARD")
+        );
 
-        processBookings();
-        displayAllocations();
-
-        // Add services
-        addService("DEL-1", new Service("Breakfast", 200));
-        displayServices("DEL-1");
-        calculateTotalCost("DEL-1");
-    }
-
-    // -------- Booking Methods --------
-    private static void processBookings() {
-        while (!requestQueue.isEmpty()) {
-            confirmReservation(requestQueue.poll());
+        // Process bookings safely
+        for (BookingRequest request : requests) {
+            try {
+                processBooking(request);
+            } catch (InvalidBookingException e) {
+                System.out.println("Booking FAILED: " + e.getMessage());
+            }
         }
     }
 
-    private static void confirmReservation(BookingRequest request) {
-        String type = request.roomType;
+    private static void processBooking(BookingRequest request)
+            throws InvalidBookingException {
 
-        if (!inventory.containsKey(type) || inventory.get(type) <= 0) {
-            System.out.println("Booking FAILED for " + request.customerName);
-            return;
-        }
+        // Step 1: Validate (Fail-Fast)
+        Validator.validate(request, inventory);
 
-        String roomId = type.substring(0, 3).toUpperCase() + "-" + roomCounter++;
+        // Step 2: Generate unique room ID
+        String roomId;
+        do {
+            roomId = request.roomType.substring(0, 3).toUpperCase() + "-" + roomCounter++;
+        } while (usedRoomIds.contains(roomId));
 
+        // Step 3: Safe allocation (only after validation)
         usedRoomIds.add(roomId);
-        allocatedRooms.putIfAbsent(type, new HashSet<>());
-        allocatedRooms.get(type).add(roomId);
-        inventory.put(type, inventory.get(type) - 1);
 
-        System.out.println("CONFIRMED: " + request.customerName + " -> " + roomId);
-    }
-
-    private static void displayAllocations() {
-        System.out.println(allocatedRooms);
-    }
-
-    // -------- Service Methods --------
-    private static void addService(String id, Service s) {
-        reservationServices.putIfAbsent(id, new ArrayList<>());
-        reservationServices.get(id).add(s);
-    }
-
-    private static void displayServices(String id) {
-        System.out.println(reservationServices.get(id));
-    }
-
-    private static void calculateTotalCost(String id) {
-        double total = 0;
-        for (Service s : reservationServices.getOrDefault(id, new ArrayList<>())) {
-            total += s.cost;
+        // Step 4: Update inventory safely
+        int current = inventory.get(request.roomType);
+        if (current - 1 < 0) {
+            throw new InvalidBookingException("Inventory cannot go negative!");
         }
-        System.out.println("Total: ₹" + total);
+        inventory.put(request.roomType, current - 1);
+
+        // Step 5: Confirm booking
+        System.out.println("Booking CONFIRMED for " + request.customerName +
+                " | Room: " + request.roomType +
+                " | ID: " + roomId);
     }
 }

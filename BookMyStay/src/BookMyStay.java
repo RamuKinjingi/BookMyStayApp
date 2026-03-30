@@ -1,29 +1,38 @@
+import java.util.HashMap;
+import java.util.Map;
 
-
-// Main Class (Your Required Structure)
 public class BookMyStay {
     public static void main(String[] args) {
 
-        // Polymorphism
+        // Room objects
         Room single = new SingleRoom();
         Room doubleRoom = new DoubleRoom();
         Room suite = new SuiteRoom();
 
-        // Static availability
-        int singleAvailability = 10;
-        int doubleAvailability = 5;
-        int suiteAvailability = 2;
+        // Inventory initialization
+        RoomInventory inventory = new RoomInventory();
 
-        System.out.println("=== Hotel Room Details ===\n");
+        // Display room details
+        System.out.println("=== Room Details ===\n");
 
         single.displayDetails();
-        System.out.println("Available: " + singleAvailability + "\n");
+        System.out.println();
 
         doubleRoom.displayDetails();
-        System.out.println("Available: " + doubleAvailability + "\n");
+        System.out.println();
 
         suite.displayDetails();
-        System.out.println("Available: " + suiteAvailability + "\n");
+        System.out.println();
+
+        // Display inventory
+        inventory.displayInventory();
+
+        // Update example
+        System.out.println("Updating Single Room availability to 8...\n");
+        inventory.updateAvailability("Single Room", 8);
+
+        // Display updated inventory
+        inventory.displayInventory();
 
         System.out.println("=== End of Program ===");
     }

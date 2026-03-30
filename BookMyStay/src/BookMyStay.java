@@ -1,39 +1,31 @@
-import java.util.HashMap;
-import java.util.Map;
 
-public class BookMyStay {
-    public static void main(String[] args) {
+public class BookMystay {
+    public static void main(String args[]){
 
-        // Room objects
-        Room single = new SingleRoom();
-        Room doubleRoom = new DoubleRoom();
-        Room suite = new SuiteRoom();
 
-        // Inventory initialization
+        // Initialize inventory system
         RoomInventory inventory = new RoomInventory();
 
-        // Display room details
-        System.out.println("=== Room Details ===\n");
+        // Register room types
+        inventory.addRoomType("Single", 10);
+        inventory.addRoomType("Double", 5);
+        inventory.addRoomType("Suite", 2);
 
-        single.displayDetails();
-        System.out.println();
-
-        doubleRoom.displayDetails();
-        System.out.println();
-
-        suite.displayDetails();
-        System.out.println();
-
-        // Display inventory
+        // Display initial state
         inventory.displayInventory();
 
-        // Update example
-        System.out.println("Updating Single Room availability to 8...\n");
-        inventory.updateAvailability("Single Room", 8);
+        // Simulate booking (reduce availability)
+        System.out.println("\nBooking 2 Single rooms...");
+        inventory.updateAvailability("Single", -2);
 
-        // Display updated inventory
+        // Simulate cancellation (increase availability)
+        System.out.println("Cancelling 1 Double room...");
+        inventory.updateAvailability("Double", +1);
+
+        // Check specific availability
+        System.out.println("\nAvailable Suites: " + inventory.getAvailability("Suite"));
+
+        // Final inventory state
         inventory.displayInventory();
-
-        System.out.println("=== End of Program ===");
     }
 }

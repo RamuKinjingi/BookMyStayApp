@@ -1,31 +1,31 @@
+public class BookMyStay {
+    public static void main(String[] args) {
+        BookingRequestQueue bookingQueue = new BookingRequestQueue();
 
-public class BookMystay {
-    public static void main(String args[]){
+        // Simulating multiple guest requests
+        Reservation r1 = new Reservation("Avinash", "Deluxe", 2);
+        Reservation r2 = new Reservation("Ravi", "Suite", 3);
+        Reservation r3 = new Reservation("Priya", "Standard", 1);
+        Reservation r4 = new Reservation("Kiran", "Deluxe", 4);
 
+        // Step 1: Add requests (arrival order)
+        bookingQueue.addRequest(r1);
+        bookingQueue.addRequest(r2);
+        bookingQueue.addRequest(r3);
+        bookingQueue.addRequest(r4);
 
-        // Initialize inventory system
-        RoomInventory inventory = new RoomInventory();
+        // Step 2: Display queue
+        bookingQueue.displayQueue();
 
-        // Register room types
-        inventory.addRoomType("Single", 10);
-        inventory.addRoomType("Double", 5);
-        inventory.addRoomType("Suite", 2);
+        // Step 3: Show next request (no removal)
+        System.out.println("\nNext request to process (peek):");
+        System.out.println(bookingQueue.getNextRequest());
 
-        // Display initial state
-        inventory.displayInventory();
+        // Step 4: Process one request (FIFO)
+        System.out.println("\nProcessing request:");
+        System.out.println(bookingQueue.processNextRequest());
 
-        // Simulate booking (reduce availability)
-        System.out.println("\nBooking 2 Single rooms...");
-        inventory.updateAvailability("Single", -2);
-
-        // Simulate cancellation (increase availability)
-        System.out.println("Cancelling 1 Double room...");
-        inventory.updateAvailability("Double", +1);
-
-        // Check specific availability
-        System.out.println("\nAvailable Suites: " + inventory.getAvailability("Suite"));
-
-        // Final inventory state
-        inventory.displayInventory();
+        // Step 5: Display updated queue
+        bookingQueue.displayQueue();
     }
 }

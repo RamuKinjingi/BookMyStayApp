@@ -1,6 +1,6 @@
 import java.util.*;
 
-// Add-On Service class
+// Service class
 class Service {
     String serviceName;
     double cost;
@@ -10,73 +10,97 @@ class Service {
         this.cost = cost;
     }
 
-    @Override
     public String toString() {
         return serviceName + " (₹" + cost + ")";
     }
 }
 
+// Booking Request class
+class BookingRequest {
+    String customerName;
+    String roomType;
+
+    public BookingRequest(String customerName, String roomType) {
+        this.customerName = customerName;
+        this.roomType = roomType;
+    }
+}
+
 public class BookMyStay {
 
-    // Reservation ID -> List of Services
+    // ----------- Booking सिस्टम -----------
+    private static Queue<BookingRequest> requestQueue = new LinkedList<>();
+    private static Map<String, Integer> inventory = new HashMap<>();
+    private static Map<String, Set<String>> allocatedRooms = new HashMap<>();
+    private static Set<String> usedRoomIds = new HashSet<>();
+    private static int roomCounter = 1;
+
+    // ----------- Services सिस्टम -----------
     private static Map<String, List<Service>> reservationServices = new HashMap<>();
 
     public static void main(String[] args) {
 
-        // Assume these reservation IDs are already created in Use Case 6
-        String res1 = "DEL-1";
-        String res2 = "SUI-2";
+        // Inventory setup
+        inventory.put("DELUXE", 2);
+        inventory.put("SUITE", 1);
+
+        // Booking requests
+        requestQueue.add(new BookingRequest("Avinash", "DELUXE"));
+        requestQueue.add(new BookingRequest("Ravi", "SUITE"));
+
+        processBookings();
+        displayAllocations();
 
         // Add services
-        addService(res1, new Service("Breakfast", 200));
-        addService(res1, new Service("Airport Pickup", 500));
-        addService(res2, new Service("Extra Bed", 300));
-
-        // Display services
-        displayServices(res1);
-        displayServices(res2);
-
-        // Calculate cost
-        calculateTotalCost(res1);
-        calculateTotalCost(res2);
+        addService("DEL-1", new Service("Breakfast", 200));
+        displayServices("DEL-1");
+        calculateTotalCost("DEL-1");
     }
 
-    // Add service to reservation
-    private static void addService(String reservationId, Service service) {
-        reservationServices.putIfAbsent(reservationId, new ArrayList<>());
-        reservationServices.get(reservationId).add(service);
-
-        System.out.println("Service added to " + reservationId + ": " + service);
+    // -------- Booking Methods --------
+    private static void processBookings() {
+        while (!requestQueue.isEmpty()) {
+            confirmReservation(requestQueue.poll());
+        }
     }
 
-    // Display services for a reservation
-    private static void displayServices(String reservationId) {
-        System.out.println("\nServices for Reservation " + reservationId + ":");
+    private static void confirmReservation(BookingRequest request) {
+        String type = request.roomType;
 
-        List<Service> services = reservationServices.get(reservationId);
-
-        if (services == null || services.isEmpty()) {
-            System.out.println("No services selected.");
+        if (!inventory.containsKey(type) || inventory.get(type) <= 0) {
+            System.out.println("Booking FAILED for " + request.customerName);
             return;
         }
 
-        for (Service s : services) {
-            System.out.println("- " + s);
-        }
+        String roomId = type.substring(0, 3).toUpperCase() + "-" + roomCounter++;
+
+        usedRoomIds.add(roomId);
+        allocatedRooms.putIfAbsent(type, new HashSet<>());
+        allocatedRooms.get(type).add(roomId);
+        inventory.put(type, inventory.get(type) - 1);
+
+        System.out.println("CONFIRMED: " + request.customerName + " -> " + roomId);
     }
 
-    // Calculate total additional cost
-    private static void calculateTotalCost(String reservationId) {
-        List<Service> services = reservationServices.get(reservationId);
+    private static void displayAllocations() {
+        System.out.println(allocatedRooms);
+    }
 
+    // -------- Service Methods --------
+    private static void addService(String id, Service s) {
+        reservationServices.putIfAbsent(id, new ArrayList<>());
+        reservationServices.get(id).add(s);
+    }
+
+    private static void displayServices(String id) {
+        System.out.println(reservationServices.get(id));
+    }
+
+    private static void calculateTotalCost(String id) {
         double total = 0;
-
-        if (services != null) {
-            for (Service s : services) {
-                total += s.cost;
-            }
+        for (Service s : reservationServices.getOrDefault(id, new ArrayList<>())) {
+            total += s.cost;
         }
-
-        System.out.println("Total Add-On Cost for " + reservationId + ": ₹" + total);
+        System.out.println("Total: ₹" + total);
     }
 }
